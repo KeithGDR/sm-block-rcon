@@ -1,7 +1,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.0.2"
 #define PLUGIN_DESCRIPTION "Disables all access to RCON-based commands."
 
 #include <sourcemod>
@@ -52,7 +52,7 @@ void ParseWhitelisted()
 	g_Whitelisted.Clear();
 	
 	char sLine[64];
-	while (file.EndOfFile() && file.ReadLine(sLine, sizeof(sLine)))
+	while (!file.EndOfFile() && file.ReadLine(sLine, sizeof(sLine)))
 	{
 		TrimString(sLine);
 		g_Whitelisted.PushString(sLine);

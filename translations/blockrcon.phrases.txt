@@ -1,0 +1,20 @@
+"Phrases"
+{
+	"whitelist log"
+	{
+		"#format"	"{1:i}"
+		"en"	"{1} IP addresses whitelisted for RCON use."
+	}
+
+	"smrcon onauth log"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"	"RCON command attempt: {1} - {2}"
+	}
+
+	"convar hook log"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"	"RCON command attempt: {1} - {2}"
+	}
+}

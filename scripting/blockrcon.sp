@@ -1,7 +1,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.0.2"
+#define PLUGIN_VERSION "1.0.3"
 #define PLUGIN_DESCRIPTION "Disables all access to RCON-based commands."
 
 #include <sourcemod>
@@ -16,7 +16,7 @@ ArrayList g_Whitelisted;
 
 public Plugin myinfo = 
 {
-	name = "Block RCON", 
+	name = "[ANY] Block RCON", 
 	author = "Drixevel", 
 	description = PLUGIN_DESCRIPTION, 
 	version = PLUGIN_VERSION, 
@@ -24,12 +24,13 @@ public Plugin myinfo =
 };
 
 public void OnPluginStart()
-{	
+{
+	LoadTranslations("blockrcon.phrases");
+
 	CreateConVar("sm_blockrcon_version", PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY | FCVAR_DONTRECORD);
 	convar_Status = CreateConVar("sm_blockrcon_status", "1", "Status of the plugin.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	convar_LogAttempts = CreateConVar("sm_blockrcon_logattempts", "1", "Log any attempts used to access the RCON command.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	convar_LogFormat = CreateConVar("sm_blockrcon_logformat", ".%m_%y", "Log formatting to use for the postfix information. (Can be empty)", FCVAR_NOTIFY, true);
-
 	AutoExecConfig();
 	
 	convar_Password = FindConVar("rcon_password");
@@ -59,7 +60,7 @@ void ParseWhitelisted()
 	}
 	
 	file.Close();
-	LogMessage("%i IP addresses whitelisted for RCON use.", g_Whitelisted.Length);
+	LogMessage("%t", "whitelist log", g_Whitelisted.Length);
 }
 
 public void OnConfigsExecuted()
@@ -73,7 +74,7 @@ public Action SMRCon_OnAuth(int rconId, const char[] address, const char[] passw
 	if (convar_Status.BoolValue && g_Whitelisted.FindString(address) == -1)
 	{
 		allow = false;
-		RCONLog("RCON command attempt: %s - %s", strlen(address) > 0 ? address : "N/A", strlen(password) > 0 ? password : "N/A");
+		RCONLog("%t", "smrcon onauth log", strlen(address) > 0 ? address : "N/A", strlen(password) > 0 ? password : "N/A");
 		return Plugin_Changed;
 	}
 	
@@ -84,7 +85,7 @@ public void HookConVar_Password(ConVar convar, const char[] oldValue, const char
 {
 	if (convar_Status.BoolValue && strlen(newValue) > 0)
 	{
-		RCONLog("RCON password change attempt: %s - %s", strlen(oldValue) > 0 ? oldValue : "N/A", strlen(newValue) > 0 ? newValue : "N/A");
+		RCONLog("%t", "convar hook log", strlen(oldValue) > 0 ? oldValue : "N/A", strlen(newValue) > 0 ? newValue : "N/A");
 		convar.SetString(oldValue);
 	}
 }
@@ -105,5 +106,21 @@ void RCONLog(const char[] sFormat, any ...)
 	
 	char sLogPath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sLogPath, sizeof(sLogPath), "logs/rcon.attempts%s.log", sTime);
+
+	DataPack pack;
+	CreateDataTimer(0.2, Timer_CreateLog, pack, TIMER_FLAG_NO_MAPCHANGE);
+	pack.WriteString(sLogPath);
+	pack.WriteString(sBuffer);
+}
+
+public Action Timer_CreateLog(Handle timer, DataPack pack) {
+	char sLogPath[PLATFORM_MAX_PATH];
+	pack.ReadString(sLogPath, sizeof(sLogPath));
+
+	char sBuffer[1024];
+	pack.ReadString(sBuffer, sizeof(sBuffer));
+
 	LogToFile(sLogPath, sBuffer);
+
+	return Plugin_Continue;
 }

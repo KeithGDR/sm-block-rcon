@@ -1,5 +1,4 @@
 .vscode
-plugins
 scripting/compile.exe
 scripting/compile.dat
 scripting/compile.bat

@@ -1,7 +1,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.0.3"
+#define PLUGIN_VERSION "1.0.3a"
 #define PLUGIN_DESCRIPTION "Disables all access to RCON-based commands."
 
 #include <sourcemod>
@@ -10,6 +10,7 @@
 ConVar convar_Status;
 ConVar convar_LogAttempts;
 ConVar convar_LogFormat;
+ConVar convar_ClearPassword;
 ConVar convar_Password;
 
 ArrayList g_Whitelisted;
@@ -30,7 +31,8 @@ public void OnPluginStart()
 	CreateConVar("sm_blockrcon_version", PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY | FCVAR_DONTRECORD);
 	convar_Status = CreateConVar("sm_blockrcon_status", "1", "Status of the plugin.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	convar_LogAttempts = CreateConVar("sm_blockrcon_logattempts", "1", "Log any attempts used to access the RCON command.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	convar_LogFormat = CreateConVar("sm_blockrcon_logformat", ".%m_%y", "Log formatting to use for the postfix information. (Can be empty)", FCVAR_NOTIFY, true);
+	convar_LogFormat = CreateConVar("sm_blockrcon_logformat", ".%m_%y", "Log formatting to use for the postfix information. (Can be empty)", FCVAR_NOTIFY);
+	convar_ClearPassword = CreateConVar("sm_blockrcon_clearpassword", "1", "Keep the password cleared and empty no matter what.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	AutoExecConfig();
 	
 	convar_Password = FindConVar("rcon_password");
@@ -66,7 +68,9 @@ void ParseWhitelisted()
 public void OnConfigsExecuted()
 {
 	//Set the password to empty since that disables it.
-	convar_Password.SetString("");
+	if (convar_ClearPassword.BoolValue) {
+		convar_Password.SetString("");
+	}
 }
 
 public Action SMRCon_OnAuth(int rconId, const char[] address, const char[] password, bool &allow)
@@ -114,6 +118,8 @@ void RCONLog(const char[] sFormat, any ...)
 }
 
 public Action Timer_CreateLog(Handle timer, DataPack pack) {
+	pack.Reset();
+
 	char sLogPath[PLATFORM_MAX_PATH];
 	pack.ReadString(sLogPath, sizeof(sLogPath));
 

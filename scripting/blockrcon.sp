@@ -1,10 +1,11 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.0.3a"
+#define PLUGIN_VERSION "1.0.3b"
 #define PLUGIN_DESCRIPTION "Disables all access to RCON-based commands."
 
 #include <sourcemod>
+#undef REQUIRE_PLUGIN
 #include <smrcon>
 
 ConVar convar_Status;
